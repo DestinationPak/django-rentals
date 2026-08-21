@@ -1,9 +1,5 @@
 from django.urls import path
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularRedocView,
-    SpectacularSwaggerView,
-)
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
 from django_rentals.api import views
@@ -12,6 +8,7 @@ app_name = "rentals-api"
 
 router = DefaultRouter()
 router.register(r"listings", views.RentalListingViewSet, basename="listing")
+router.register(r"bookings", views.RentalBookingRetrieveUpdateViewSet, basename="booking")
 
 app_urlpatterns = [
     path(
