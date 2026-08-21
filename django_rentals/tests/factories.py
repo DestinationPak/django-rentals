@@ -12,7 +12,13 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 
-from django_rentals.models import RentalAvailability, RentalBooking, RentalListing, RentalOperator
+from django_rentals.models import (
+    Location,
+    RentalAvailability,
+    RentalBooking,
+    RentalListing,
+    RentalOperator,
+)
 
 User = get_user_model()
 
@@ -27,6 +33,16 @@ class UserFactory(DjangoModelFactory):
     username = factory.Sequence(lambda n: f"user-{n}")
     email = factory.Faker("email")
     password = factory.PostGenerationMethodCall("set_password", USER_PASSWORD)
+
+
+class LocationFactory(DjangoModelFactory):
+    class Meta:
+        model = Location
+        django_get_or_create = ("name",)
+
+    name = factory.Faker("city")
+    lat = factory.Faker("latitude")
+    lng = factory.Faker("longitude")
 
 
 class RentalOperatorFactory(DjangoModelFactory):
