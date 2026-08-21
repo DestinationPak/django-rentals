@@ -84,6 +84,11 @@ swappable-model setting - Django resolves it once when the app loads, and a swap
 into it) doesn't retroactively move that data; it needs a real data migration instead of a
 config change.
 
+For a worked example of a real swap: the DestinationPakistan platform (this package's own
+primary consumer, a private project) points this setting at its own `public.City` model via a
+`HotelsRentalsCityLocationAdapter` in its `djangoapps/public/adapters.py` - the same shape
+sketched above, just concretely filled in.
+
 ## Development
 
 All development happens inside Docker (`make dev.up`, `make update_db`, `make test`,
