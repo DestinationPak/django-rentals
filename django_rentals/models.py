@@ -13,11 +13,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 
-from django_rentals.choices import (
-    RentalBookingStatus,
-    RentalCategory,
-    RentalListingStatus,
-)
+from django_rentals.choices import RentalBookingStatus, RentalCategory, RentalListingStatus
 from django_rentals.managers import (
     RentalAvailabilityQuerySet,
     RentalListingQuerySet,
@@ -230,6 +226,10 @@ class RentalBooking(models.Model):
 
     def can_be_cancelled(self):
         return RentalBookingStatus.can_be_cancelled(self.status)
+
+    def cancel(self):
+        self.status = RentalBookingStatus.CANCELLED
+        self.save(update_fields=["status", "updated_at"])
 
     @classmethod
     def generate_booking_number(cls):

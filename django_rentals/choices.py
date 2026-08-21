@@ -35,4 +35,4 @@ class RentalBookingStatus(models.TextChoices):
 
     @classmethod
     def can_be_cancelled(cls, status):
-        return status in (cls.PENDING, cls.WAITING_PAYMENT, cls.CANCELLED)
+        return status in (cls.PENDING, cls.WAITING_PAYMENT)
