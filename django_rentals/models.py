@@ -9,6 +9,7 @@ built for django_trips's Host) - not something this package builds a hook for.
 
 import random
 
+import swapper
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
@@ -19,6 +20,40 @@ from django_rentals.managers import (
     RentalListingQuerySet,
     RentalOperatorQuerySet,
 )
+
+
+class Location(models.Model):
+    """
+    Default Location model for a RentalListing's city, mirroring
+    django_trips.Location's core shape - no region/parent hierarchy,
+    since Rentals has no such concept.
+    """
+
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=110, unique=True, null=True, blank=True)
+    lat = models.FloatField(null=True, blank=True)
+    lng = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        swappable = swapper.swappable_setting("django_rentals", "Location")
+        ordering = ["name"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.name)
+
+    def __repr__(self):
+        return f"<Location: {self.name} slug: {self.slug}>"
+
+
+def get_location_model():
+    """Location, or whichever model DJANGO_RENTALS_LOCATION_MODEL swaps it
+    for."""
+    return swapper.load_model("django_rentals", "Location")
 
 
 class RentalOperator(models.Model):
@@ -77,6 +112,16 @@ class RentalListing(models.Model):
         max_length=20, choices=RentalCategory.choices, default=RentalCategory.VEHICLE
     )
     city = models.CharField(max_length=100, null=True, blank=True)
+    location = models.ForeignKey(
+        swapper.get_model_name("django_rentals", "Location"),
+        null=True,
+        blank=True,
+        related_name="listings",
+        on_delete=models.SET_NULL,
+        help_text="Structured location, backfilled from `city` (P9.4) - "
+        "`city` stays in place until after destipak's own swap+reconcile "
+        "(P9.5/P9.6) lands.",
+    )
     description = models.TextField(blank=True, null=True)
     price_per_day = models.DecimalField(max_digits=10, decimal_places=0, default=0)
 
