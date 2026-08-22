@@ -27,9 +27,7 @@ jobs:
       run: pip install -r requirements.txt -r requirements-dev.txt
 
     - name: Install Django ${{ matrix.django-version }}
-      # Pinned separately from requirements.txt (which tracks one concrete
-      # version for local/docker dev) so this job actually exercises the
-      # Django range setup.cfg's install_requires claims to support.
+      # Overrides requirements.txt's own pinned Django version for this job.
       run: pip install "Django~=${{ matrix.django-version }}.0"
 
     - name: Show resolved versions
