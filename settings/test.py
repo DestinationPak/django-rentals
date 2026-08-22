@@ -1,10 +1,7 @@
 # pylint:disable=all
 from settings.common import *
 
-# SQLite in-memory, regardless of what settings.common's consumer-facing
-# DATABASES points at - the test suite shouldn't require a running MySQL
-# server, and every model/migration here is plain Django ORM with nothing
-# MySQL-specific.
+# In-memory SQLite - nothing here is MySQL-specific, and tests shouldn't need a running MySQL server.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
