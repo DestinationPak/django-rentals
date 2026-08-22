@@ -32,7 +32,5 @@ jobs:
         python -c "import rest_framework; print('djangorestframework', rest_framework.VERSION)"
 
     - name: run tests
-      run: |
-        export PYLINTRC=.pylintrc
-        python -m run_lint.py
+      run: pytest
 
