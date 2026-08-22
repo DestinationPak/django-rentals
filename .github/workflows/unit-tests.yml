@@ -27,7 +27,6 @@ jobs:
       run: pip install -r requirements.txt -r requirements-dev.txt
 
     - name: Install Django ${{ matrix.django-version }}
-      # Overrides requirements.txt's own pinned Django version for this job.
       run: pip install "Django~=${{ matrix.django-version }}.0"
 
     - name: Show resolved versions
