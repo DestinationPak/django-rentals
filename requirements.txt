@@ -9,4 +9,4 @@ drf-spectacular>=0.28.0
 swapper>=1.4.0
 
 # Database
-mysqlclient>=2.2.1
+mysqlclient>=2.2.8
