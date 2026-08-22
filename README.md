@@ -17,11 +17,13 @@ pip install django-rentals
 
 ## Usage
 
-Add the app to your installed apps:
+Add the app (and `django_filters`, used by the catalog/availability filtering below) to
+your installed apps:
 
 ```python
 INSTALLED_APPS = [
     ...
+    'django_filters',
     'django_rentals',
 ]
 ```
@@ -60,6 +62,23 @@ Like `django_trips`, this package is tenancy-oblivious: it has no concept of whi
 allowed to manage a given `RentalOperator`. That authorization layer belongs to whichever
 project installs this app (see destipak's `docs/multi-tenancy-design.md` for the pattern
 this is meant to plug into).
+
+## Public API
+
+Read-only and unauthenticated (`AllowAny`) unless noted:
+
+- `listings/` - the published catalog. Filterable via query params: `?category=`, `?city=`,
+  `?operator=<id>`.
+- `listings/<slug>/` - one listing's detail, including its images and availabilities.
+- `operators/` - active, verified `RentalOperator`s.
+- `availabilities/` - date-range availability search across active listings. Filterable via
+  `?listing=<slug>`, `?date_from=`, `?date_to=` (any combination; omitting all three returns
+  every upcoming bookable date).
+- `bookings/create/` - guest booking (no auth required).
+- `bookings/lookup/?number=&email=` - guest "find my booking".
+- `bookings/<number>/` - authenticated traveller's own booking (retrieve/update/cancel).
+- `schema/`, `schema/swagger-ui/`, `schema/redoc/` - this app's own OpenAPI schema, scoped
+  to just these endpoints regardless of what else your project mounts.
 
 ## Custom Location model
 

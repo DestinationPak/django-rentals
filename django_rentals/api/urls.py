@@ -26,6 +26,11 @@ app_urlpatterns = [
         views.RentalBookingLookupView.as_view(),
         name="bookings-lookup",
     ),
+    path(
+        "availabilities/",
+        views.RentalAvailabilityListAPIView.as_view(),
+        name="availabilities",
+    ),
     *router.urls,
 ]
 

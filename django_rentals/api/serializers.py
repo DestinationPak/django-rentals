@@ -31,6 +31,33 @@ class RentalAvailabilitySerializer(serializers.ModelSerializer):
         fields = ["id", "date", "effective_price_per_day", "units_available"]
 
 
+class RentalAvailabilityListingSerializer(serializers.ModelSerializer):
+    """Minimal listing context for an availability-search row."""
+
+    class Meta:
+        model = RentalListing
+        fields = ("id", "name", "slug")
+
+
+class RentalAvailabilitySearchSerializer(serializers.ModelSerializer):
+    """
+    Availability-search row shape, spanning multiple listings.
+
+    RentalAvailabilitySerializer (embedded under RentalListingSerializer,
+    where the parent already gives listing context) intentionally stays
+    lighter.
+    """
+
+    effective_price_per_day = serializers.DecimalField(
+        max_digits=10, decimal_places=0, read_only=True
+    )
+    listing = RentalAvailabilityListingSerializer(read_only=True)
+
+    class Meta:
+        model = RentalAvailability
+        fields = ["id", "listing", "date", "effective_price_per_day", "units_available"]
+
+
 class RentalListingSerializer(serializers.ModelSerializer):
     """Public read-only listing serializer - list and detail both use this
     for now (a "basic" scaffold doesn't yet need a separate lighter list
