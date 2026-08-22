@@ -9,11 +9,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
-      # Single entry, kept as a matrix only so the job name below can show it.
+      fail-fast: false
       matrix:
-        python-version: ["3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
+        django-version: ["4.2", "5.2"]
 
-    name: python-${{ matrix.python-version }}
+    name: python-${{ matrix.python-version }}-django-${{ matrix.django-version }}
     steps:
     - uses: actions/checkout@v4
 
@@ -24,6 +25,12 @@ jobs:
 
     - name: Install Dependencies
       run: pip install -r requirements.txt -r requirements-dev.txt
+
+    - name: Install Django ${{ matrix.django-version }}
+      # Pinned separately from requirements.txt (which tracks one concrete
+      # version for local/docker dev) so this job actually exercises the
+      # Django range setup.cfg's install_requires claims to support.
+      run: pip install "Django~=${{ matrix.django-version }}.0"
 
     - name: Show resolved versions
       run: |
