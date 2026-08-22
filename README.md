@@ -1,5 +1,10 @@
 # Django Rentals API
 
+[![PyPI version](https://img.shields.io/pypi/v/django-rentals.svg)](https://pypi.org/project/django-rentals/)
+[![Python versions](https://img.shields.io/pypi/pyversions/django-rentals.svg)](https://pypi.org/project/django-rentals/)
+[![License](https://img.shields.io/pypi/l/django-rentals.svg)](https://github.com/DestinationPak/django-rentals/blob/master/LICENSE)
+[![Unit Tests](https://github.com/DestinationPak/django-rentals/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/DestinationPak/django-rentals/actions/workflows/unit-tests.yml)
+
 A Django REST API for vehicle/gear rental operators, listings, availability, and bookings —
 the sibling package to [django-trips](https://pypi.org/project/django-trips/), part of the
 [DestinationPak](https://destinationpak.com) platform.
