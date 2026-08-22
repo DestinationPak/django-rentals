@@ -3,7 +3,7 @@ Django>=5.2,<6.0
 setuptools>=80.9.0
 
 # Django Extensions
-django-filter>=23.2,<25.2
+django-filter>=26.1,<26.2
 djangorestframework>=3.18.0,<3.19
 drf-spectacular>=0.28.0
 swapper>=1.4.0
