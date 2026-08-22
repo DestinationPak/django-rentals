@@ -15,5 +15,5 @@ pylint-django==2.8.0
 pylint-plugin-utils==0.9.0
 isort==8.0.1
 pre-commit==4.0.1
-twine==6.2.0
+twine==7.0.0
 docutils==0.23
