@@ -1,3 +1,4 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
@@ -6,14 +7,16 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from django_rentals.api.filters import RentalAvailabilityFilter
 from django_rentals.api.serializers import (
+    RentalAvailabilitySearchSerializer,
     RentalBookingCreateSerializer,
     RentalBookingSerializer,
     RentalListingSerializer,
     RentalOperatorSerializer,
 )
 from django_rentals.choices import RentalBookingStatus, RentalListingStatus
-from django_rentals.models import RentalBooking, RentalListing, RentalOperator
+from django_rentals.models import RentalAvailability, RentalBooking, RentalListing, RentalOperator
 
 
 class RentalOperatorListAPIView(generics.ListAPIView):
@@ -34,6 +37,8 @@ class RentalListingViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = RentalListingSerializer
     permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["category", "city", "operator"]
 
     def get_queryset(self):
         # `operator__verified=True` here mirrors django_hotels.Hotel.objects
@@ -48,6 +53,33 @@ class RentalListingViewSet(viewsets.ReadOnlyModelViewSet):
             )
             .select_related("operator")
             .prefetch_related("images", "availabilities")
+        )
+
+
+class RentalAvailabilityListAPIView(generics.ListAPIView):
+    """
+    Public availability search across rental listings and dates.
+
+    Excludes sold-out dates and listings that are unpublished, inactive,
+    or behind an unverified operator, matching RentalListingViewSet's
+    own catalog visibility rules.
+    """
+
+    permission_classes = [AllowAny]
+    serializer_class = RentalAvailabilitySearchSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RentalAvailabilityFilter
+
+    def get_queryset(self):
+        return (
+            RentalAvailability.objects.filter(
+                units_available__gt=0,
+                listing__status=RentalListingStatus.PUBLISHED,
+                listing__is_active=True,
+                listing__operator__verified=True,
+            )
+            .select_related("listing")
+            .order_by("date")
         )
 
 
