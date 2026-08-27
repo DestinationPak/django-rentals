@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from django_rentals.api.filters import RentalAvailabilityFilter
+from django_rentals.api.filters import RentalAvailabilityFilter, RentalListingFilter
 from django_rentals.api.serializers import (
     RentalAvailabilitySearchSerializer,
     RentalBookingCreateSerializer,
@@ -38,7 +38,7 @@ class RentalListingViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RentalListingSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["category", "city", "operator"]
+    filterset_class = RentalListingFilter
 
     def get_queryset(self):
         # `operator__verified=True` here mirrors django_hotels.Hotel.objects

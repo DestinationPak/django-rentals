@@ -111,16 +111,12 @@ class RentalListing(models.Model):
     category = models.CharField(
         max_length=20, choices=RentalCategory.choices, default=RentalCategory.VEHICLE
     )
-    city = models.CharField(max_length=100, null=True, blank=True)
     location = models.ForeignKey(
         swapper.get_model_name("django_rentals", "Location"),
+        related_name="listings",
         null=True,
         blank=True,
-        related_name="listings",
         on_delete=models.SET_NULL,
-        help_text="Structured location, backfilled from `city` (P9.4) - "
-        "`city` stays in place until after destipak's own swap+reconcile "
-        "(P9.5/P9.6) lands.",
     )
     description = models.TextField(blank=True, null=True)
     price_per_day = models.DecimalField(max_digits=10, decimal_places=0, default=0)

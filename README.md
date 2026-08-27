@@ -84,11 +84,7 @@ Read-only and unauthenticated (`AllowAny`) unless noted:
 
 `django_rentals.Location` (a plain `name`/`slug`/`lat`/`lng` model - no region/parent
 hierarchy, unlike `django_trips.Location`) is swappable, the same way Django's own
-`AUTH_USER_MODEL` is. `RentalListing.location` is a nullable FK to it, added alongside the
-pre-existing `RentalListing.city` `CharField` - `city` is **not removed**, since a data
-migration (`migrations/0003_backfill_location_from_city.py`) only best-effort backfills
-`location` from `city` by matching string; `city` stays until every consumer (destipak
-included) has finished backfilling against its own chosen Location model.
+`AUTH_USER_MODEL` is.
 
 Two settings, both optional and both defaulting to this package's own bundled model:
 
@@ -97,16 +93,18 @@ Two settings, both optional and both defaulting to this package's own bundled mo
   doesn't need to share `Location`'s field names.
 - **`DJANGO_RENTALS_LOCATION_ADAPTER`** - a dotted path to a `django_rentals.location_adapter
   .LocationAdapter` subclass telling this app how to read your model's fields as if they were
-  `Location`'s (`get_name`, `get_slug`, `get_lat`, `get_lng`). Nothing in this package's own
-  serializers reads `location`'s fields yet (`city` is still what's exposed in API output) -
-  the adapter exists as the swap-point infrastructure, ready for whichever consumer project
-  (or a later ticket here) actually surfaces `location` in output.
+  `Location`'s (`get_name`, `get_slug`, `get_lat`, `get_lng`).
 
 **Set both before your project's first `migrate`.** Like `AUTH_USER_MODEL`, this is a
 swappable-model setting - Django resolves it once when the app loads, and a swap made after
 `Location`'s own table has already been created (and other tables have already foreign-keyed
 into it) doesn't retroactively move that data; it needs a real data migration instead of a
 config change.
+
+`RentalListing.location` is the only location field on `RentalListing` - the original
+free-text `RentalListing.city` field has been dropped. `RentalListingSerializer` exposes
+`location` as an object (`name`/`slug`/`lat`/`lng`) read through `get_location_adapter()`,
+and the public `?city=` query param filters on `location__name` under the hood.
 
 For a worked example of a real swap: the DestinationPakistan platform (this package's own
 primary consumer, a private project) points this setting at its own `public.City` model via a

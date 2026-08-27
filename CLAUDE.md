@@ -62,18 +62,16 @@ Everything hangs off `RentalListing` (`django_rentals/models.py`):
   are visually distinguishable from Trips bookings.
 - `Location` (plain `name`/`slug`/`lat`/`lng`, no hierarchy — unlike `django_trips.Location`'s
   `type`/`parent`) is swappable via `swapper` (see README's "Custom Location model"), the same
-  mechanism `django_trips.Location`/`django_hotels.Location` use. `RentalListing.location` is a new,
-  nullable FK added alongside the pre-existing `RentalListing.city` `CharField` — `city` is **not yet
-  removed**; a data migration (`migrations/0003_backfill_location_from_city.py`) best-effort backfills
-  `location` from `city` by string match (get-or-create one `Location` per distinct normalized city
-  value; a blank/null `city` is left unmatched, never guessed at), and `city` only gets dropped once
-  every consumer (destipak included) has finished backfilling against its own chosen Location model.
-  `django_rentals/location_adapter.py` (`LocationAdapter`/`get_location_adapter()`,
-  `DJANGO_RENTALS_LOCATION_ADAPTER`) is the read path for location fields, mirroring
-  `django_trips/location_adapter.py` one vertical over — nothing in this package's own serializers
-  reads `location`'s fields yet (`city` is still what's exposed), so the adapter exists as the
-  swap-point infrastructure, ready for whichever consumer project (or a later ticket here) actually
-  surfaces `location` in output.
+  mechanism `django_trips.Location`/`django_hotels.Location` use. `RentalListing.location` is now
+  the only location field on `RentalListing` — the original free-text `RentalListing.city`
+  `CharField` has been dropped (`migrations/0004_remove_rentallisting_city.py`), after
+  `migrations/0003_backfill_location_from_city.py` best-effort backfilled `location` from `city`
+  by name (get-or-create one `Location` per distinct normalized city value; a blank/null `city`
+  was left unmatched, never guessed at). `django_rentals/location_adapter.py`
+  (`LocationAdapter`/`get_location_adapter()`, `DJANGO_RENTALS_LOCATION_ADAPTER`) is the read path
+  for location fields, mirroring `django_trips/location_adapter.py` one vertical over —
+  `RentalListingSerializer` now exposes `location` as a nested object through the adapter, and
+  `RentalListingFilter`'s public `?city=` query param filters on `location__name` under the hood.
 
 ### Tenancy-oblivious, on purpose
 

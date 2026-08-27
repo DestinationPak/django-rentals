@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from django_rentals.location_adapter import get_location_adapter
 from django_rentals.models import (
     RentalAvailability,
     RentalBooking,
@@ -7,6 +8,25 @@ from django_rentals.models import (
     RentalListing,
     RentalOperator,
 )
+
+
+class LocationSerializer(serializers.Serializer):
+    name = serializers.SerializerMethodField()
+    slug = serializers.SerializerMethodField()
+    lat = serializers.SerializerMethodField()
+    lng = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return get_location_adapter().get_name(obj)
+
+    def get_slug(self, obj):
+        return get_location_adapter().get_slug(obj)
+
+    def get_lat(self, obj):
+        return get_location_adapter().get_lat(obj)
+
+    def get_lng(self, obj):
+        return get_location_adapter().get_lng(obj)
 
 
 class RentalOperatorSerializer(serializers.ModelSerializer):
@@ -64,6 +84,7 @@ class RentalListingSerializer(serializers.ModelSerializer):
     shape the way TripListSerializer/TripDetailSerializer split in django_trips)."""
 
     operator = RentalOperatorSerializer(read_only=True)
+    location = LocationSerializer(read_only=True)
     images = RentalImageSerializer(many=True, read_only=True)
     availabilities = RentalAvailabilitySerializer(many=True, read_only=True)
 
@@ -75,7 +96,7 @@ class RentalListingSerializer(serializers.ModelSerializer):
             "slug",
             "operator",
             "category",
-            "city",
+            "location",
             "description",
             "price_per_day",
             "status",

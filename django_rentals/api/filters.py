@@ -2,7 +2,7 @@
 
 import django_filters
 
-from django_rentals.models import RentalAvailability
+from django_rentals.models import RentalAvailability, RentalListing
 
 
 class RentalAvailabilityFilter(django_filters.FilterSet):
@@ -15,3 +15,11 @@ class RentalAvailabilityFilter(django_filters.FilterSet):
     class Meta:
         model = RentalAvailability
         fields = ["listing", "date_from", "date_to"]
+
+
+class RentalListingFilter(django_filters.FilterSet):
+    city = django_filters.CharFilter(field_name="location__name", lookup_expr="iexact")
+
+    class Meta:
+        model = RentalListing
+        fields = ["category", "city", "operator"]

@@ -68,7 +68,7 @@ class RentalListingFactory(DjangoModelFactory):
 
     name = factory.Faker("company")
     operator = factory.SubFactory(RentalOperatorFactory)
-    city = factory.Faker("city")
+    location = factory.SubFactory(LocationFactory)
     description = factory.Faker("text")
     price_per_day = factory.Faker("random_int", min=2000, max=20000)
     created_by = factory.SubFactory(UserFactory)

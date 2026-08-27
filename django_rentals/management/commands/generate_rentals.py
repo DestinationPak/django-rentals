@@ -16,7 +16,12 @@ from django.utils.text import slugify
 from faker import Faker
 
 from django_rentals.choices import RentalCategory
-from django_rentals.models import RentalAvailability, RentalListing, RentalOperator
+from django_rentals.models import (
+    RentalAvailability,
+    RentalListing,
+    RentalOperator,
+    get_location_model,
+)
 
 fake = Faker()
 User = get_user_model()
@@ -70,12 +75,15 @@ class Command(BaseCommand):
             name = (
                 f"{fake.word().title()} {'4x4' if category == RentalCategory.VEHICLE else 'Kit'}"
             )
+            location, _ = get_location_model().objects.get_or_create(
+                name=random.choice(cities)
+            )
             listing = RentalListing.objects.create(
                 name=name,
                 slug=f"{slugify(name)}-{random.randint(1000, 9999)}",
                 operator=operator,
                 category=category,
-                city=random.choice(cities),
+                location=location,
                 description=fake.paragraph(),
                 price_per_day=random.randint(20, 200) * 100,
                 created_by=creator,

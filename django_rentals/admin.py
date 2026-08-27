@@ -34,11 +34,9 @@ class RentalOperatorAdmin(admin.ModelAdmin):
 
 @admin.register(RentalListing)
 class RentalListingAdmin(admin.ModelAdmin):
-    # No autocomplete_fields for location - it would require LocationAdmin
-    # to always be registered, which isn't true once Location is swapped.
-    list_display = ["name", "operator", "category", "city", "location", "status", "is_active"]
+    list_display = ["name", "operator", "category", "location", "status", "is_active"]
     list_filter = ["category", "status", "is_active"]
-    search_fields = ["name", "city"]
+    search_fields = ["name"]
 
 
 @admin.register(RentalAvailability)

@@ -16,8 +16,7 @@ class LocationAdapter:
     instance.
 
     The default implementation assumes django_rentals' own Location
-    model's shape (name, slug, lat, lng) - deliberately minimal, matching
-    what RentalListing.city ever exposed. An installer that swaps
+    model's shape (name, slug, lat, lng). An installer that swaps
     DJANGO_RENTALS_LOCATION_MODEL to a differently-shaped model must also
     set DJANGO_RENTALS_LOCATION_ADAPTER to a subclass overriding whichever
     of these a plain attribute read on their own model can't satisfy.

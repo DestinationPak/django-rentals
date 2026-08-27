@@ -5,7 +5,11 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from django_rentals.choices import RentalCategory
-from django_rentals.tests.factories import RentalListingFactory, RentalOperatorFactory
+from django_rentals.tests.factories import (
+    LocationFactory,
+    RentalListingFactory,
+    RentalOperatorFactory,
+)
 
 
 class RentalListingViewSetFilteringTestCase(TestCase):
@@ -27,8 +31,8 @@ class RentalListingViewSetFilteringTestCase(TestCase):
         self.assertEqual(listing_ids, {matching.id})
 
     def test_filters_by_city(self):
-        matching = RentalListingFactory(city="Hunza")
-        RentalListingFactory(city="Skardu")
+        matching = RentalListingFactory(location=LocationFactory(name="Hunza"))
+        RentalListingFactory(location=LocationFactory(name="Skardu"))
 
         listing_ids = self._listing_ids({"city": "Hunza"})
 
