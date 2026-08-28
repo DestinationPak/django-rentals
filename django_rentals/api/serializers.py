@@ -16,16 +16,16 @@ class LocationSerializer(serializers.Serializer):
     lat = serializers.SerializerMethodField()
     lng = serializers.SerializerMethodField()
 
-    def get_name(self, obj):
+    def get_name(self, obj) -> str | None:
         return get_location_adapter().get_name(obj)
 
-    def get_slug(self, obj):
+    def get_slug(self, obj) -> str | None:
         return get_location_adapter().get_slug(obj)
 
-    def get_lat(self, obj):
+    def get_lat(self, obj) -> float | None:
         return get_location_adapter().get_lat(obj)
 
-    def get_lng(self, obj):
+    def get_lng(self, obj) -> float | None:
         return get_location_adapter().get_lng(obj)
 
 
@@ -84,7 +84,7 @@ class RentalListingSerializer(serializers.ModelSerializer):
     shape the way TripListSerializer/TripDetailSerializer split in django_trips)."""
 
     operator = RentalOperatorSerializer(read_only=True)
-    location = LocationSerializer(read_only=True)
+    location = LocationSerializer(read_only=True, allow_null=True)
     images = RentalImageSerializer(many=True, read_only=True)
     availabilities = RentalAvailabilitySerializer(many=True, read_only=True)
 

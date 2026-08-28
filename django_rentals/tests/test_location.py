@@ -118,9 +118,11 @@ class BackfillLocationFromCityTestCase(TransactionTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        with connection.schema_editor() as editor:
-            editor.remove_field(cls.HistoricalRentalListing, cls.city_field)
-        super().tearDownClass()
+        try:
+            with connection.schema_editor() as editor:
+                editor.remove_field(cls.HistoricalRentalListing, cls.city_field)
+        finally:
+            super().tearDownClass()
 
     def make_listing(self, city):
         operator = RentalOperatorFactory()

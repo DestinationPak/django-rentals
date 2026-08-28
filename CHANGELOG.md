@@ -5,6 +5,18 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Removed
+- `RentalListing.city` (a free-text `CharField`) - superseded by the
+  swappable `location` foreign key.
+
+### Changed
+- `RentalListingSerializer` now returns a nested `location` object
+  (`name`/`slug`/`lat`/`lng`, read through `get_location_adapter()`)
+  instead of the removed `city` string field.
+- `RentalListingFilter`'s public `?city=` query parameter now does a
+  case-insensitive match against `location.name` instead of an exact
+  match on the removed `city` field.
+
 ### Fixed
 - CI's `Unit Tests` workflow now actually runs `pytest` - its last step was a
   copy-paste of the `Quality` workflow's lint command, so no test in the

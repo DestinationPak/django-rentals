@@ -51,7 +51,7 @@ class RentalListingViewSet(viewsets.ReadOnlyModelViewSet):
                 is_active=True,
                 operator__verified=True,
             )
-            .select_related("operator")
+            .select_related("operator", "location")
             .prefetch_related("images", "availabilities")
         )
 
