@@ -73,7 +73,10 @@ Everything hangs off `RentalListing` (`django_rentals/models.py`):
   `django_trips/location_adapter.py` one vertical over — nothing in this package's own serializers
   reads `location`'s fields yet (`city` is still what's exposed), so the adapter exists as the
   swap-point infrastructure, ready for whichever consumer project (or a later ticket here) actually
-  surfaces `location` in output.
+  surfaces `location` in output. `AbstractLocation` (`models.py`) is a plain abstract Django model -
+  the same shape `AbstractUser` is, real fields and concrete methods, not an interface class - an
+  installer building a brand-new custom Location model can inherit directly instead of writing a
+  `LocationAdapter` subclass; see README's "Custom Location model" for when to reach for which.
 
 ### Tenancy-oblivious, on purpose
 
