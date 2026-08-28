@@ -104,6 +104,12 @@ split `django_trips.TripViewSet` uses post-hardening.
 `django-rentals/wsgi.py`/`asgi.py`/`urls.py` are the minimal dev-only project shell and aren't part of
 the published package.
 
+`DATABASES` reads `DATABASE_ENGINE`, defaulting to `django.db.backends.sqlite3` if unset - matching
+the pattern well-known reusable Django apps (django-oscar, wagtail) use, so a bare `manage.py
+runserver` outside Docker works with zero DB setup. `docker-compose.yml`'s `web` service explicitly
+sets `DATABASE_ENGINE=django.db.backends.mysql`, so the documented Docker devstack keeps using real
+MySQL as before - this only adds an escape hatch, it doesn't change `make dev.up`'s default behavior.
+
 ## Testing conventions
 
 Write tests as `django.test.TestCase` subclasses (`unittest`-style classes), not bare
