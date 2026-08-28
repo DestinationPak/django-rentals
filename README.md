@@ -102,6 +102,28 @@ Two settings, both optional and both defaulting to this package's own bundled mo
   the adapter exists as the swap-point infrastructure, ready for whichever consumer project
   (or a later ticket here) actually surfaces `location` in output.
 
+Building a brand-new Location model rather than reusing one you already have? Inherit
+`django_rentals.models.AbstractLocation` instead of writing an adapter - it's a plain abstract
+Django model (the same shape `AbstractUser` is - real fields and concrete methods, not an
+interface class) already carrying `name`/`slug`/`lat`/`lng` and their read methods, so you get
+a working swap with no `DJANGO_RENTALS_LOCATION_ADAPTER` at all:
+
+```python
+# myapp/models.py
+from django_rentals.models import AbstractLocation
+
+class MyLocation(AbstractLocation):
+    city_code = models.CharField(max_length=10)
+```
+
+```python
+# settings.py
+DJANGO_RENTALS_LOCATION_MODEL = "myapp.MyLocation"
+```
+
+Reusing an existing model instead - one you can't restructure, or one shared with other
+libraries - stick with the adapter approach above; that's what it's for.
+
 **Set both before your project's first `migrate`.** Like `AUTH_USER_MODEL`, this is a
 swappable-model setting - Django resolves it once when the app loads, and a swap made after
 `Location`'s own table has already been created (and other tables have already foreign-keyed

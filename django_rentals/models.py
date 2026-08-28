@@ -22,11 +22,18 @@ from django_rentals.managers import (
 )
 
 
-class Location(models.Model):
+class AbstractLocation(models.Model):
     """
-    Default Location model for a RentalListing's city, mirroring
-    django_trips.Location's core shape - no region/parent hierarchy,
-    since Rentals has no such concept.
+    Base fields and behavior for a Location model.
+
+    Inherit this to build a custom Location model instead of writing a
+    LocationAdapter subclass - you get these fields and methods for
+    free and only override what needs to change. See the README's
+    "Custom Location model" section for when to reach for this versus
+    the adapter.
+
+    Deliberately minimal - no region/parent hierarchy, since Rentals
+    has no such concept.
     """
 
     name = models.CharField(max_length=100)
@@ -35,7 +42,7 @@ class Location(models.Model):
     lng = models.FloatField(null=True, blank=True)
 
     class Meta:
-        swappable = swapper.swappable_setting("django_rentals", "Location")
+        abstract = True
         ordering = ["name"]
 
     def save(self, *args, **kwargs):
@@ -48,6 +55,13 @@ class Location(models.Model):
 
     def __repr__(self):
         return f"<Location: {self.name} slug: {self.slug}>"
+
+
+class Location(AbstractLocation):
+    """This package's own default, concrete Location model."""
+
+    class Meta(AbstractLocation.Meta):
+        swappable = swapper.swappable_setting("django_rentals", "Location")
 
 
 def get_location_model():
