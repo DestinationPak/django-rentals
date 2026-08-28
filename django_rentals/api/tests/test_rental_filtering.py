@@ -1,11 +1,15 @@
-"""RentalListingViewSet filtering: category, city, operator."""
+"""RentalListingViewSet filtering: category, location, operator."""
 
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
 from django_rentals.choices import RentalCategory
-from django_rentals.tests.factories import RentalListingFactory, RentalOperatorFactory
+from django_rentals.tests.factories import (
+    LocationFactory,
+    RentalListingFactory,
+    RentalOperatorFactory,
+)
 
 
 class RentalListingViewSetFilteringTestCase(TestCase):
@@ -26,11 +30,12 @@ class RentalListingViewSetFilteringTestCase(TestCase):
 
         self.assertEqual(listing_ids, {matching.id})
 
-    def test_filters_by_city(self):
-        matching = RentalListingFactory(city="Hunza")
-        RentalListingFactory(city="Skardu")
+    def test_filters_by_location(self):
+        hunza = LocationFactory(name="Hunza")
+        matching = RentalListingFactory(location=hunza)
+        RentalListingFactory(location=LocationFactory(name="Skardu"))
 
-        listing_ids = self._listing_ids({"city": "Hunza"})
+        listing_ids = self._listing_ids({"location": hunza.id})
 
         self.assertEqual(listing_ids, {matching.id})
 

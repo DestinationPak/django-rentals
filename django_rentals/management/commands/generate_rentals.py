@@ -16,7 +16,12 @@ from django.utils.text import slugify
 from faker import Faker
 
 from django_rentals.choices import RentalCategory
-from django_rentals.models import RentalAvailability, RentalListing, RentalOperator
+from django_rentals.models import (
+    RentalAvailability,
+    RentalListing,
+    RentalOperator,
+    get_location_model,
+)
 
 fake = Faker()
 User = get_user_model()
@@ -63,29 +68,32 @@ class Command(BaseCommand):
             operators.append(operator)
 
         batch_size = options["batch_size"]
-        created = 0
         for _ in range(batch_size):
-            operator = random.choice(operators)
-            category = random.choice(list(RentalCategory.values))
-            name = (
-                f"{fake.word().title()} {'4x4' if category == RentalCategory.VEHICLE else 'Kit'}"
-            )
-            listing = RentalListing.objects.create(
-                name=name,
-                slug=f"{slugify(name)}-{random.randint(1000, 9999)}",
-                operator=operator,
-                category=category,
-                city=random.choice(cities),
-                description=fake.paragraph(),
-                price_per_day=random.randint(20, 200) * 100,
-                created_by=creator,
-            )
-            for offset in range(1, 8):
-                RentalAvailability.objects.create(
-                    listing=listing,
-                    date=timezone.now().date() + timedelta(days=offset),
-                    units_available=random.randint(1, 5),
-                )
-            created += 1
+            self._create_listing(operators, cities, creator)
 
-        self.stdout.write(self.style.SUCCESS(f"Created {created} rental listings."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Created {batch_size} rental listings.")
+        )
+
+    def _create_listing(self, operators, cities, creator):
+        category = random.choice(list(RentalCategory.values))
+        name = f"{fake.word().title()} {'4x4' if category == RentalCategory.VEHICLE else 'Kit'}"
+        location, _ = get_location_model().objects.get_or_create(
+            name=random.choice(cities)
+        )
+        listing = RentalListing.objects.create(
+            name=name,
+            slug=f"{slugify(name)}-{random.randint(1000, 9999)}",
+            operator=random.choice(operators),
+            category=category,
+            location=location,
+            description=fake.paragraph(),
+            price_per_day=random.randint(20, 200) * 100,
+            created_by=creator,
+        )
+        for offset in range(1, 8):
+            RentalAvailability.objects.create(
+                listing=listing,
+                date=timezone.now().date() + timedelta(days=offset),
+                units_available=random.randint(1, 5),
+            )
