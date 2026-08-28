@@ -131,9 +131,11 @@ into it) doesn't retroactively move that data; it needs a real data migration in
 config change.
 
 For a worked example of a real swap: the DestinationPakistan platform (this package's own
-primary consumer, a private project) points this setting at its own `public.City` model via a
-`HotelsRentalsCityLocationAdapter` in its `djangoapps/public/adapters.py` - the same shape
-sketched above, just concretely filled in.
+primary consumer, a private project) points this setting directly at its own `public.Location`
+model, with no adapter override at all - `public.Location` already has `name`/`slug`/`lat`, plus
+an `lng` property alias (its own field is `lon`, matching django-trips' naming), so the default
+`LocationAdapter` reads it correctly with no subclass. See `docs/location-model-swap-design.md`
+in that project for the full writeup.
 
 ## Development
 
