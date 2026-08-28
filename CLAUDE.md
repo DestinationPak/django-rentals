@@ -28,10 +28,19 @@ make dev.up           # start web + mysql containers
 make shell            # attach a shell inside the web container
 make update_db         # run migrations
 make random_rentals     # seed random rental operators/listings (generate_rentals --batch_size=100)
-make test             # docker compose run --rm web pytest
+make test             # docker compose run --rm --no-deps -e DJANGO_SETTINGS_MODULE=settings.test web pytest
 make stop / make destroy  # stop / tear down containers (destroy removes volumes too)
 make logs             # tail web container logs
 ```
+
+`make test` explicitly overrides `DJANGO_SETTINGS_MODULE` and skips the `database` dependency -
+`settings/test.py` swaps in an in-memory SQLite `DATABASES`, but `docker-compose.yml`'s `web`
+service sets `DJANGO_SETTINGS_MODULE=settings.common` as a container-wide environment variable,
+which pytest-django only ever uses as a fallback (`os.environ.setdefault`, never overriding an
+already-set var) - so without the explicit `-e` override, `pytest.ini`'s own
+`DJANGO_SETTINGS_MODULE = settings.test` is silently ignored and tests run against real MySQL
+instead, which also makes `--no-deps` (skip starting the `database` container) unsafe to combine
+with the plain `docker compose run --rm web pytest` form.
 
 Running a single test (inside the container, e.g. via `make shell`):
 
@@ -39,8 +48,9 @@ Running a single test (inside the container, e.g. via `make shell`):
 pytest django_rentals/tests/test_models.py
 ```
 
-Test settings use `settings.test` (`DJANGO_SETTINGS_MODULE=settings.test` per `pytest.ini`), which just
-imports `settings.common` with `--no-migrations` — tests build schema directly from models.
+Test settings use `settings.test` (`DJANGO_SETTINGS_MODULE=settings.test` per `pytest.ini`), which imports
+`settings.common` but swaps `DATABASES` to an in-memory SQLite backend - combined with `--no-migrations`,
+tests build schema directly from models against SQLite, not the MySQL real deployments run against.
 
 ## Architecture
 
@@ -100,9 +110,10 @@ split `django_trips.TripViewSet` uses post-hardening.
 ### Settings
 
 `settings/common.py` is the real settings module for local dev (Docker sets
-`DJANGO_SETTINGS_MODULE=settings.common`); `settings/test.py` just re-exports it for pytest.
-`django-rentals/wsgi.py`/`asgi.py`/`urls.py` are the minimal dev-only project shell and aren't part of
-the published package.
+`DJANGO_SETTINGS_MODULE=settings.common`); `settings/test.py` re-exports it for pytest but swaps
+`DATABASES` to an in-memory SQLite backend (see "Common commands" above for how `make test` forces
+this to actually take effect). `django-rentals/wsgi.py`/`asgi.py`/`urls.py` are the minimal dev-only
+project shell and aren't part of the published package.
 
 `DATABASES` reads `DATABASE_ENGINE`, defaulting to `django.db.backends.sqlite3` if unset - matching
 the pattern well-known reusable Django apps (django-oscar, wagtail) use, so a bare `manage.py
