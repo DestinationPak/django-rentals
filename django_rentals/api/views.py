@@ -38,7 +38,7 @@ class RentalListingViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RentalListingSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["category", "city", "operator"]
+    filterset_fields = ["category", "location", "operator"]
 
     def get_queryset(self):
         # `operator__verified=True` here mirrors django_hotels.Hotel.objects

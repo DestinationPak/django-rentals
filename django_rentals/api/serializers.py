@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from django_rentals.location_adapter import get_location_adapter
 from django_rentals.models import (
     RentalAvailability,
     RentalBooking,
@@ -7,6 +8,32 @@ from django_rentals.models import (
     RentalListing,
     RentalOperator,
 )
+
+
+class LocationSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+    """
+    A plain Serializer, not a ModelSerializer - every field is read
+    through get_location_adapter() rather than by name off the model
+    directly, so this keeps working whether django_rentals.Location or a
+    swapped-in model (DJANGO_RENTALS_LOCATION_MODEL) backs the FK.
+    """
+
+    name = serializers.SerializerMethodField()
+    slug = serializers.SerializerMethodField()
+    lat = serializers.SerializerMethodField()
+    lng = serializers.SerializerMethodField()
+
+    def get_name(self, location):
+        return get_location_adapter().get_name(location)
+
+    def get_slug(self, location):
+        return get_location_adapter().get_slug(location)
+
+    def get_lat(self, location):
+        return get_location_adapter().get_lat(location)
+
+    def get_lng(self, location):
+        return get_location_adapter().get_lng(location)
 
 
 class RentalOperatorSerializer(serializers.ModelSerializer):
@@ -64,6 +91,7 @@ class RentalListingSerializer(serializers.ModelSerializer):
     shape the way TripListSerializer/TripDetailSerializer split in django_trips)."""
 
     operator = RentalOperatorSerializer(read_only=True)
+    location = LocationSerializer(read_only=True)
     images = RentalImageSerializer(many=True, read_only=True)
     availabilities = RentalAvailabilitySerializer(many=True, read_only=True)
 
@@ -75,7 +103,7 @@ class RentalListingSerializer(serializers.ModelSerializer):
             "slug",
             "operator",
             "category",
-            "city",
+            "location",
             "description",
             "price_per_day",
             "status",

@@ -62,18 +62,17 @@ Everything hangs off `RentalListing` (`django_rentals/models.py`):
   are visually distinguishable from Trips bookings.
 - `Location` (plain `name`/`slug`/`lat`/`lng`, no hierarchy — unlike `django_trips.Location`'s
   `type`/`parent`) is swappable via `swapper` (see README's "Custom Location model"), the same
-  mechanism `django_trips.Location`/`django_hotels.Location` use. `RentalListing.location` is a new,
-  nullable FK added alongside the pre-existing `RentalListing.city` `CharField` — `city` is **not yet
-  removed**; a data migration (`migrations/0003_backfill_location_from_city.py`) best-effort backfills
-  `location` from `city` by string match (get-or-create one `Location` per distinct normalized city
-  value; a blank/null `city` is left unmatched, never guessed at), and `city` only gets dropped once
-  every consumer (destipak included) has finished backfilling against its own chosen Location model.
-  `django_rentals/location_adapter.py` (`LocationAdapter`/`get_location_adapter()`,
-  `DJANGO_RENTALS_LOCATION_ADAPTER`) is the read path for location fields, mirroring
-  `django_trips/location_adapter.py` one vertical over — nothing in this package's own serializers
-  reads `location`'s fields yet (`city` is still what's exposed), so the adapter exists as the
-  swap-point infrastructure, ready for whichever consumer project (or a later ticket here) actually
-  surfaces `location` in output. `AbstractLocation` (`models.py`) is a plain abstract Django model -
+  mechanism `django_trips.Location`/`django_hotels.Location` use. `RentalListing.location`
+  (nullable FK) is now the only location field on `RentalListing` - the original free-text
+  `RentalListing.city` `CharField` (`migrations/0003_backfill_location_from_city.py` best-effort
+  backfilled `location` from it by string match) has been dropped
+  (`migrations/0004_remove_rentallisting_city.py`), once every consumer (destipak included) had
+  finished backfilling against its own chosen Location model. `django_rentals/location_adapter.py`
+  (`LocationAdapter`/`get_location_adapter()`, `DJANGO_RENTALS_LOCATION_ADAPTER`) is the read path
+  for location fields, mirroring `django_trips/location_adapter.py` one vertical over -
+  `RentalListingSerializer` now exposes `location` as a nested object through the adapter (via
+  this package's own `LocationSerializer`), and `?location=<id>` filters on it directly.
+  `AbstractLocation` (`models.py`) is a plain abstract Django model -
   the same shape `AbstractUser` is, real fields and concrete methods, not an interface class - an
   installer building a brand-new custom Location model can inherit directly instead of writing a
   `LocationAdapter` subclass; see README's "Custom Location model" for when to reach for which.
