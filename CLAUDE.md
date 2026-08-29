@@ -147,6 +147,18 @@ generation and `.active()` filter tests) rather than needing an incidental fixtu
 
 ## Packaging
 
+**This package is published to PyPI - every change here ships to real installs, not just
+this repo's own Docker dev setup.** As of today there's exactly one known consumer
+(destipak, via an editable VCS install - see its own `requirements/base.in`), but that
+number is 1, not "just us" - the package is public the moment it's on PyPI, regardless of
+how many projects currently depend on it. Before changing anything packaging-related
+(`pyproject.toml`, module layout, `__init__.py`, entry points, dependency ranges) or any
+public import path/behavior, check it against real installer protocols: does `pip install
+django-rentals` still work, does an editable VCS install (`pip install -e
+git+https://...#egg=django-rentals`) still resolve, does `python -m build` + `twine check`
+still pass. Verify with an actual install and a real build, not just the local test suite -
+a change that only works when edited in place inside this repo isn't finished.
+
 All metadata lives in `pyproject.toml` alone (no `setup.py`/`setup.cfg`/`MANIFEST.in`) -
 PEP 621 `[project]` table plus `[tool.setuptools]` for the `src/` layout and package
 discovery. Two things worth knowing if you touch it:
