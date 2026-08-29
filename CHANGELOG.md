@@ -5,6 +5,8 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-29
+
 ### Changed
 - Migrated packaging from `setup.py`/`setup.cfg`/`MANIFEST.in` to a single
   `pyproject.toml` (PEP 621), and moved the importable app to `src/
