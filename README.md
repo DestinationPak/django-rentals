@@ -138,3 +138,18 @@ in that project for the full writeup.
 
 All development happens inside Docker (`make dev.up`, `make update_db`, `make test`,
 `make random_rentals`) — see the Makefile (`make help` lists every target).
+
+## Documentation
+
+This README is also published as browsable docs (`docs/`, built with Sphinx). Build it
+locally with:
+```bash
+pip install -e ".[docs]"
+sphinx-build -b html docs docs/_build
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development/release workflow, and the
+[Code of Conduct](CODE_OF_CONDUCT.md). Found a security issue? See
+[SECURITY.md](SECURITY.md) rather than opening a public issue.
