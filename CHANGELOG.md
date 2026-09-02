@@ -5,6 +5,19 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+- Dropped the `djangorestframework` dependency ceiling entirely
+  (`>=3.16,<3.19` to `>=3.16`), for consistency with django-trips and
+  django-hotels: DRF has no known-breaking major version to guard
+  against right now, so a floor is enough, and an unnecessary ceiling
+  in a library forces every consumer's resolver to match it, causing
+  conflicts for anyone using two of this package's siblings together.
+- Dropped the `django-filter` ceiling entirely (`>=23.2,<26.2` to
+  `>=23.2`). `django-filter` uses CalVer (23.x/24.x/25.x/26.x, no
+  semver breaking-major signal), so the ceiling wasn't protecting
+  against anything specific and would have started blocking upgrades
+  the moment `26.2` shipped.
+
 ## [0.3.1] - 2026-08-29
 
 ### Changed
