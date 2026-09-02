@@ -5,6 +5,14 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Changed
+- Dropped the `djangorestframework` dependency ceiling entirely
+  (`>=3.16,<3.19` to `>=3.16`), for consistency with django-trips and
+  django-hotels: DRF has no known-breaking major version to guard
+  against right now, so a floor is enough, and an unnecessary ceiling
+  in a library forces every consumer's resolver to match it, causing
+  conflicts for anyone using two of this package's siblings together.
+
 ## [0.3.1] - 2026-08-29
 
 ### Changed
