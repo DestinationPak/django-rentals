@@ -5,22 +5,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 `django-rentals` is a reusable Django app (published as a pip package, see `pyproject.toml`) for
-rental operators, listings, availability, and bookings: models, querysets, business rules
-(`services.py`) and admin. Its DRF API (`django_rentals.api`, `django_rentals.urls`) is deprecated
-since 0.4.0 and removed in 1.0.0, after which each consumer builds its own API. It covers
-vehicle/gear rentals (jeep
-tours, trekking equipment) for the [DestinationPak](https://destinationpak.com) platform. It's the
-sibling package to `django-trips`, following the same structure, and consumers install it and mount
-its urls under a namespace of their choosing (see README "Usage").
+rental operators, listings, availability, and bookings - vehicle/gear rentals (jeep tours, trekking
+equipment) for the [DestinationPak](https://destinationpak.com) platform: models, querysets, business
+rules (`services.py`) and admin. It ships no API, views or URLs (the DRF API was removed in 1.0.0):
+each consumer builds its own endpoints on the services and querysets. Never add an endpoint,
+serializer or `urls.py` back; a new rule goes in `services.py` or a queryset. It's the sibling
+package to `django-trips`, following the same structure.
 
 The importable app lives at `src/django_rentals/` (`src/` layout - see "Packaging" below for why).
 `devsite/` is a separate, throwaway Django *project* shell used only for local dev
 (`urls.py`/`wsgi.py`/`asgi.py`) - deliberately named nothing like `django_rentals` so the two can't be
 confused with each other or with the published package.
 
-This is a **basic initial scaffold**, not a full port of every django-trips feature — it deliberately
-skips drf-spectacular schema annotations beyond the bare minimum. That's a fast-follow, not an
-omission to "fix" without checking with the maintainer first.
+This is a **basic initial scaffold**, not a full port of every django-trips feature: models, the
+booking and catalog rules, and admin exist; there are no reviews and no availability check on booking
+yet.
 
 ## Common commands
 
@@ -66,8 +65,8 @@ Everything hangs off `RentalListing` (`django_rentals/models.py`):
   domain model with no login/auth fields.
 - `RentalListing` → `RentalAvailability` (a specific bookable date, mirrors `TripSchedule`) →
   `RentalBooking` (mirrors `TripBooking`, but books a `start_date`/`end_date` range, not a single
-  departure date — `total_price` is `effective_price_per_day * days`, computed server-side in
-  `RentalBookingCreateSerializer.create()`).
+  departure date — `total_price` is `effective_price_per_day * days`, computed in
+  `services.create_rental_booking()`).
 - There is **no separate tier/package model** the way `django_trips` has `TripPackage` — a distinct
   `RentalListing` per vehicle/kit already serves that purpose. Don't add one without a real product
   reason; see the naming-convention discussion this repo was scaffolded from.
@@ -83,9 +82,7 @@ Everything hangs off `RentalListing` (`django_rentals/models.py`):
   (`migrations/0004_remove_rentallisting_city.py`), once every consumer (destipak included) had
   finished backfilling against its own chosen Location model. `django_rentals/location_adapter.py`
   (`LocationAdapter`/`get_location_adapter()`, `DJANGO_RENTALS_LOCATION_ADAPTER`) is the read path
-  for location fields, mirroring `django_trips/location_adapter.py` one vertical over -
-  `RentalListingSerializer` now exposes `location` as a nested object through the adapter (via
-  this package's own `LocationSerializer`), and `?location=<id>` filters on it directly.
+  a consumer uses for location fields, mirroring `django_trips/location_adapter.py` one vertical over.
   `AbstractLocation` (`models.py`) is a plain abstract Django model -
   the same shape `AbstractUser` is, real fields and concrete methods, not an interface class - an
   installer building a brand-new custom Location model can inherit directly instead of writing a
@@ -102,27 +99,13 @@ add auth/permission/ownership-membership code to this package.
 
 ### Business rules
 
-Rules live in `services.py` (writes) and the model querysets in `managers.py` (reads), never only
-in a serializer or view: `create_rental_booking()` checks the date range (`validate_rental_dates()`,
+Rules live in `services.py` (writes) and the model querysets in `managers.py` (reads), so every
+consumer's API, command or admin action gets the same behavior: `create_rental_booking()` checks the date range (`validate_rental_dates()`,
 Django `ValidationError` when it ends before it starts) and prices it at the availability's
 per-day price times the days, inclusive (no stock check or decrement yet).
 `RentalListing.objects.published()` and `RentalAvailability.objects.bookable()` are the public
 catalog rules (published, active, operator verified), and `RentalBooking.objects.matching_guest(
 number, email=...)` is the guest lookup rule (never `number` alone).
-
-### API layer (deprecated, removed in 1.0.0)
-
-Don't add endpoints or business logic here; importing `django_rentals.api` emits a
-`DeprecationWarning`. The notes below describe the 0.x API as it stands.
-
-`django_rentals/api/urls.py` wires a `DefaultRouter` (`RentalListingViewSet` read-only;
-`RentalBookingRetrieveUpdateViewSet` for the authenticated "my booking" retrieve/update/cancel, scoped
-to `created_by=request.user`) plus explicit `path()` entries for operators list, booking create
-(`AllowAny`), and booking lookup (by `number` + `email` together, case-insensitive, never `number`
-alone — mirrors `django_hotels.HotelBookingLookupView`'s fixed shape, itself mirroring
-`TripBookingLookupView`). `RentalListingViewSet` is deliberately read-only (`ReadOnlyModelViewSet`) —
-create/update/destroy belong to the consuming project's operator-facing surface, not this package, same
-split `django_trips.TripViewSet` uses post-hardening.
 
 ### Settings
 
@@ -203,8 +186,7 @@ discovery. Two things worth knowing if you touch it:
   re-checking wheel contents (`python -m zipfile -l dist/*.whl`) afterward.
 
 `django_rentals.tests` (the factories module, see "Testing conventions" above) ships in the
-built package deliberately; `django_rentals.api.tests` (this package's own internal API test
-suite, not documented as consumer-facing anywhere) is excluded via `packages.find`'s `exclude`.
+built package deliberately.
 
 Releasing is CI-only: pushing a version tag triggers `release.yaml`, which builds, runs
 `twine check`, and publishes via PyPI Trusted Publishing (OIDC - `permissions: id-token:

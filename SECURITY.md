@@ -29,7 +29,6 @@ own by design (see `CLAUDE.md`'s "Tenancy-oblivious, on purpose" note) -
 access control for that data is the responsibility of whatever project
 installs this app. Reports about the *absence* of tenancy/permission
 enforcement in this package aren't vulnerabilities in the usual sense (it's a
-documented architectural choice), but reports about data leaking *within*
-this package's own endpoints (e.g. the guest booking lookup returning another
-guest's booking, or the authenticated booking retrieve/update/cancel endpoint
-not actually scoping to `created_by=request.user`) are very much in scope.
+documented architectural choice), but reports about this package's own rules
+leaking data (e.g. `RentalBooking.objects.matching_guest()` matching another
+guest's booking) are very much in scope.
