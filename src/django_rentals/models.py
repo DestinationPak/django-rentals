@@ -17,6 +17,7 @@ from django.utils.text import slugify
 from django_rentals.choices import RentalBookingStatus, RentalCategory, RentalListingStatus
 from django_rentals.managers import (
     RentalAvailabilityQuerySet,
+    RentalBookingQuerySet,
     RentalListingQuerySet,
     RentalOperatorQuerySet,
 )
@@ -263,6 +264,8 @@ class RentalBooking(models.Model):
         blank=True,
         help_text="Null for guest bookings.",
     )
+
+    objects = RentalBookingQuerySet.as_manager()
 
     class Meta:
         ordering = ["-created_at"]
