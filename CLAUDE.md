@@ -4,8 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`django-rentals` is a reusable Django app (published as a pip package, see `pyproject.toml`) providing
-a REST API for rental operators, listings, availability, and bookings — vehicle/gear rentals (jeep
+`django-rentals` is a reusable Django app (published as a pip package, see `pyproject.toml`) for
+rental operators, listings, availability, and bookings: models, querysets, business rules
+(`services.py`) and admin. Its DRF API (`django_rentals.api`, `django_rentals.urls`) is deprecated
+since 0.4.0 and removed in 1.0.0, after which each consumer builds its own API. It covers
+vehicle/gear rentals (jeep
 tours, trekking equipment) for the [DestinationPak](https://destinationpak.com) platform. It's the
 sibling package to `django-trips`, following the same structure, and consumers install it and mount
 its urls under a namespace of their choosing (see README "Usage").
@@ -97,7 +100,20 @@ project installs this app owns the login/permission/scoping layer on top (destip
 `djangoapps/rental_operators/`, built against `RentalOperator` instead of `Host`/`HotelOwner`). Do not
 add auth/permission/ownership-membership code to this package.
 
-### API layer
+### Business rules
+
+Rules live in `services.py` (writes) and the model querysets in `managers.py` (reads), never only
+in a serializer or view: `create_rental_booking()` checks the date range (`validate_rental_dates()`,
+Django `ValidationError` when it ends before it starts) and prices it at the availability's
+per-day price times the days, inclusive (no stock check or decrement yet).
+`RentalListing.objects.published()` and `RentalAvailability.objects.bookable()` are the public
+catalog rules (published, active, operator verified), and `RentalBooking.objects.matching_guest(
+number, email=...)` is the guest lookup rule (never `number` alone).
+
+### API layer (deprecated, removed in 1.0.0)
+
+Don't add endpoints or business logic here; importing `django_rentals.api` emits a
+`DeprecationWarning`. The notes below describe the 0.x API as it stands.
 
 `django_rentals/api/urls.py` wires a `DefaultRouter` (`RentalListingViewSet` read-only;
 `RentalBookingRetrieveUpdateViewSet` for the authenticated "my booking" retrieve/update/cancel, scoped

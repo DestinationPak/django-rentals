@@ -1,13 +1,15 @@
-# Django Rentals API
+# Django Rentals
 
 [![PyPI version](https://img.shields.io/pypi/v/django-rentals.svg)](https://pypi.org/project/django-rentals/)
 [![Python versions](https://img.shields.io/pypi/pyversions/django-rentals.svg)](https://pypi.org/project/django-rentals/)
 [![License](https://img.shields.io/pypi/l/django-rentals.svg)](https://github.com/DestinationPak/django-rentals/blob/main/LICENSE)
 [![Unit Tests](https://github.com/DestinationPak/django-rentals/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/DestinationPak/django-rentals/actions/workflows/unit-tests.yml)
 
-A Django REST API for vehicle/gear rental operators, listings, availability, and bookings —
-the sibling package to [django-trips](https://pypi.org/project/django-trips/), part of the
-[DestinationPak](https://destinationpak.com) platform.
+A Django app for vehicle/gear rental operators, listings, availability, and bookings: models,
+querysets, business rules and admin. It's the sibling package to
+[django-trips](https://pypi.org/project/django-trips/), part of the
+[DestinationPak](https://destinationpak.com) platform. It also ships a DRF API, deprecated since
+0.4.0 and removed in 1.0.0 (see "Business rules" below).
 
 ## Installation
 
@@ -63,7 +65,33 @@ allowed to manage a given `RentalOperator`. That authorization layer belongs to 
 project installs this app (see destipak's `docs/multi-tenancy-design.md` for the pattern
 this is meant to plug into).
 
+## Business rules
+
+The booking and availability rules live in `django_rentals.services` and the model querysets,
+so any caller (your own API, a management command, the admin) gets the same behaviour:
+
+```python
+from django_rentals.models import RentalAvailability, RentalBooking, RentalListing
+from django_rentals.services import create_rental_booking
+
+listings = RentalListing.objects.published()               # published, active, verified operator
+open_dates = RentalAvailability.objects.bookable()          # in stock, on a published listing
+booking = create_rental_booking(
+    availability, full_name="Ayesha Khan", email="ayesha@example.com",
+    phone_number="+923001234567", start_date=start, end_date=end,
+)                                                            # per-day price x days, inclusive
+found = RentalBooking.objects.matching_guest(number, email="ayesha@example.com")
+```
+
+`create_rental_booking` raises Django's `ValidationError` when the range ends before it starts,
+and doesn't check or reduce `units_available` yet. `matching_guest` never matches on the
+booking number alone.
+
 ## Public API
+
+> **Deprecated:** the DRF API below (`django_rentals.api`, `django_rentals.urls`) is removed in
+> 1.0.0. Build your own endpoints on the services and querysets above.
+
 
 Read-only and unauthenticated (`AllowAny`) unless noted:
 

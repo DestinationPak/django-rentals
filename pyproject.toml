@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "django-rentals"
 dynamic = ["version"]
-description = "A Django Rest API for rental (vehicle/gear) listings, availability, and bookings."
+description = "A Django app for rental (vehicle/gear) listings, availability and bookings: models, business rules and admin."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Awais Jibran", email = "awaisdar001@gmail.com" }]
