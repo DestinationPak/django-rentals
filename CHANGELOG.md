@@ -5,7 +5,29 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-25
+
+### Added
+- `django_rentals.services.create_rental_booking()` and
+  `validate_rental_dates()`, the booking rules that used to live only in
+  `RentalBookingCreateSerializer`: the range must not end before it
+  starts, and the booking is priced at the availability's per-day price
+  times the days, inclusive. It doesn't check or reduce
+  `units_available` yet.
+- `RentalListing.objects.published()`, `RentalAvailability.objects
+  .bookable()` and `RentalBooking.objects.matching_guest(number,
+  email=...)` (the guest lookup, never on `number` alone). The API views
+  and serializer call these, so API behaviour is unchanged.
+
+### Deprecated
+- `django_rentals.api` and `django_rentals.urls`. Importing
+  `django_rentals.api` now emits a `DeprecationWarning`. Both are removed
+  in 1.0.0, which ships the domain only; build your own API on
+  `django_rentals.services` and the querysets.
+
 ### Changed
+- The package description now calls it a Django app rather than a REST
+  API.
 - Dropped the `djangorestframework` dependency ceiling entirely
   (`>=3.16,<3.19` to `>=3.16`), for consistency with django-trips and
   django-hotels: DRF has no known-breaking major version to guard

@@ -1,5 +1,7 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
+from django_rentals import services
 from django_rentals.location_adapter import get_location_adapter
 from django_rentals.models import (
     RentalAvailability,
@@ -129,18 +131,16 @@ class RentalBookingCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        if attrs["end_date"] < attrs["start_date"]:
-            raise serializers.ValidationError("end_date must be on or after start_date.")
+        try:
+            services.validate_rental_dates(attrs["start_date"], attrs["end_date"])
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.messages[0]) from exc
         return attrs
 
     def create(self, validated_data):
-        availability = validated_data["availability"]
-        days = (validated_data["end_date"] - validated_data["start_date"]).days + 1
-        validated_data["total_price"] = availability.effective_price_per_day * days
         request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            validated_data["created_by"] = request.user
-        return super().create(validated_data)
+        created_by = request.user if request and request.user.is_authenticated else None
+        return services.create_rental_booking(created_by=created_by, **validated_data)
 
 
 class RentalBookingSerializer(serializers.ModelSerializer):

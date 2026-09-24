@@ -15,7 +15,7 @@ from django_rentals.api.serializers import (
     RentalListingSerializer,
     RentalOperatorSerializer,
 )
-from django_rentals.choices import RentalBookingStatus, RentalListingStatus
+from django_rentals.choices import RentalBookingStatus
 from django_rentals.models import RentalAvailability, RentalBooking, RentalListing, RentalOperator
 
 
@@ -41,16 +41,8 @@ class RentalListingViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ["category", "location", "operator"]
 
     def get_queryset(self):
-        # `operator__verified=True` here mirrors django_hotels.Hotel.objects
-        # .active()'s owner__verified check - an unverified operator's
-        # listings must not be publicly bookable just because the listing
-        # itself is published/active.
         return (
-            RentalListing.objects.filter(
-                status=RentalListingStatus.PUBLISHED,
-                is_active=True,
-                operator__verified=True,
-            )
+            RentalListing.objects.published()
             .select_related("operator")
             .prefetch_related("images", "availabilities")
         )
@@ -71,16 +63,7 @@ class RentalAvailabilityListAPIView(generics.ListAPIView):
     filterset_class = RentalAvailabilityFilter
 
     def get_queryset(self):
-        return (
-            RentalAvailability.objects.filter(
-                units_available__gt=0,
-                listing__status=RentalListingStatus.PUBLISHED,
-                listing__is_active=True,
-                listing__operator__verified=True,
-            )
-            .select_related("listing")
-            .order_by("date")
-        )
+        return RentalAvailability.objects.bookable().select_related("listing")
 
 
 class RentalBookingCreateView(generics.CreateAPIView):
@@ -122,7 +105,7 @@ class RentalBookingLookupView(generics.RetrieveAPIView):
                 {"detail": "`number` and `email` query parameters are required."}
             )
         return generics.get_object_or_404(
-            RentalBooking.objects.all(), number=number, email__iexact=email
+            RentalBooking.objects.matching_guest(number, email=email)
         )
 
 
