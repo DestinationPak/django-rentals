@@ -5,6 +5,20 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-25
+
+The package now ships the rentals domain only: models, querysets,
+services, admin and migrations. Build your own API on
+`django_rentals.services` and the model querysets (see the README's
+"Business rules"). Pin `django-rentals<1` to keep the old API.
+
+### Removed
+- `django_rentals.api`: every view, serializer and filter, deprecated since
+  0.4.0.
+- `django_rentals.urls`, so the package no longer mounts any URLs.
+- The `djangorestframework`, `django-filter` and `drf-spectacular`
+  dependencies.
+
 ## [0.4.0] - 2026-09-25
 
 ### Added

@@ -8,8 +8,9 @@
 A Django app for vehicle/gear rental operators, listings, availability, and bookings: models,
 querysets, business rules and admin. It's the sibling package to
 [django-trips](https://pypi.org/project/django-trips/), part of the
-[DestinationPak](https://destinationpak.com) platform. It also ships a DRF API, deprecated since
-0.4.0 and removed in 1.0.0 (see "Business rules" below).
+[DestinationPak](https://destinationpak.com) platform. It ships no API or URLs: build your own
+endpoints on the services and querysets described under "Business rules" below. (The DRF API it
+shipped in 0.x was removed in 1.0.0; see the changelog.)
 
 ## Installation
 
@@ -19,13 +20,11 @@ pip install django-rentals
 
 ## Usage
 
-Add the app (and `django_filters`, used by the catalog/availability filtering below) to
-your installed apps:
+Add the app to your installed apps:
 
 ```python
 INSTALLED_APPS = [
     ...
-    'django_filters',
     'django_rentals',
 ]
 ```
@@ -35,20 +34,6 @@ INSTALLED_APPS = [
 ```bash
 python manage.py migrate
 ```
-
-Mount its urls under a namespace of your choosing:
-
-```python
-urlpatterns = [
-    ...
-    path('rentals/', include('django_rentals.urls')),
-]
-```
-
-This mounts the whole app under your own chosen prefix (`rentals/` above) with the lib's
-own `v1/` version underneath it, e.g. `rentals/v1/listings/`,
-`rentals/v1/schema/redoc/`. The app versions itself independently of your project's own
-API version.
 
 ## Domain model
 
@@ -87,27 +72,6 @@ found = RentalBooking.objects.matching_guest(number, email="ayesha@example.com")
 and doesn't check or reduce `units_available` yet. `matching_guest` never matches on the
 booking number alone.
 
-## Public API
-
-> **Deprecated:** the DRF API below (`django_rentals.api`, `django_rentals.urls`) is removed in
-> 1.0.0. Build your own endpoints on the services and querysets above.
-
-
-Read-only and unauthenticated (`AllowAny`) unless noted:
-
-- `listings/` - the published catalog. Filterable via query params: `?category=`,
-  `?location=<id>`, `?operator=<id>`.
-- `listings/<slug>/` - one listing's detail, including its images and availabilities.
-- `operators/` - active, verified `RentalOperator`s.
-- `availabilities/` - date-range availability search across active listings. Filterable via
-  `?listing=<slug>`, `?date_from=`, `?date_to=` (any combination; omitting all three returns
-  every upcoming bookable date).
-- `bookings/create/` - guest booking (no auth required).
-- `bookings/lookup/?number=&email=` - guest "find my booking".
-- `bookings/<number>/` - authenticated traveller's own booking (retrieve/update/cancel).
-- `schema/`, `schema/swagger-ui/`, `schema/redoc/` - this app's own OpenAPI schema, scoped
-  to just these endpoints regardless of what else your project mounts.
-
 ## Custom Location model
 
 `django_rentals.Location` (a plain `name`/`slug`/`lat`/`lng` model - no region/parent
@@ -124,8 +88,9 @@ Two settings, both optional and both defaulting to this package's own bundled mo
   doesn't need to share `Location`'s field names.
 - **`DJANGO_RENTALS_LOCATION_ADAPTER`** - a dotted path to a `django_rentals.location_adapter
   .LocationAdapter` subclass telling this app how to read your model's fields as if they were
-  `Location`'s (`get_name`, `get_slug`, `get_lat`, `get_lng`). `RentalListingSerializer` exposes
-  `location` as a nested object through this adapter, and `?location=<id>` filters on it directly.
+  `Location`'s (`get_name`, `get_slug`, `get_lat`, `get_lng`). Read location fields through
+  `get_location_adapter()` rather than by field name, so your adapter is the only place that needs
+  to know your model's real shape.
 
 Building a brand-new Location model rather than reusing one you already have? Inherit
 `django_rentals.models.AbstractLocation` instead of writing an adapter - it's a plain abstract

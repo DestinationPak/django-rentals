@@ -24,9 +24,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "drf_spectacular",
-    "django_filters",
     "django_rentals",
 ]
 
@@ -91,17 +88,6 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
-    ],
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticatedOrReadOnly",),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 10,
-    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-}
 
 # # # # # # # # # # # # # # # # # # # # # # #
 #     generate_rentals command args         #
@@ -111,17 +97,3 @@ USE_DEFAULT_RENTALS = False
 RENTAL_OPERATORS = ("Northern Wheels", "Base Camp Gear", "Skardu 4x4 Co", "Hunza Rentals")
 RENTAL_CITIES = ("Skardu", "Hunza", "Gilgit", "Naran", "Islamabad")
 
-SPECTACULAR_SETTINGS = {
-    "TITLE": "Django Rentals API",
-    "DESCRIPTION": "Django Rentals management restful API",
-    "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": False,
-    "ENUM_NAME_OVERRIDES": {
-        "RentalCategoryEnum": "django_rentals.choices.RentalCategory",
-        "RentalListingStatusEnum": "django_rentals.choices.RentalListingStatus",
-        "RentalBookingStatusEnum": "django_rentals.choices.RentalBookingStatus",
-    },
-    "ENUM_SUFFIX": "Enum",
-    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
-    "SCHEMA_PATH_PREFIX": "/v1",
-}
