@@ -99,30 +99,44 @@ def create_rental_booking(  # pylint:disable=too-many-arguments
     return booking
 
 
-def cancel_rental_booking(booking):
+def _give_units_back(booking):
+    released = _first_row_per_day(
+        RentalAvailability.objects.select_for_update()
+        .filter(
+            listing_id=booking.availability.listing_id,
+            date__range=(booking.start_date, booking.end_date),
+        )
+        .order_by("date", "pk")
+    )
+    RentalAvailability.objects.filter(
+        pk__in=[row.pk for row in released.values()]
+    ).update(units_available=F("units_available") + 1)
+
+
+def cancel_rental_booking(booking, *, check_cancellable=True):
     """
     Cancel `booking` and give one unit back on each day it covered.
 
-    Raises a ValidationError when the booking is already cancelled or its
-    status no longer allows cancelling.
+    Raises a ValidationError when the booking is already cancelled, or when
+    `check_cancellable` is set and its status no longer allows a guest or
+    operator to cancel. Staff tools pass `check_cancellable=False` to cancel
+    a confirmed booking too.
     """
     if RentalBookingStatus.is_cancelled(booking.status):
         raise ValidationError(ALREADY_CANCELLED)
-    if not booking.can_be_cancelled():
+    if check_cancellable and not booking.can_be_cancelled():
         raise ValidationError(CANNOT_BE_CANCELLED)
 
     with transaction.atomic():
         booking.cancel()
-        released = _first_row_per_day(
-            RentalAvailability.objects.select_for_update()
-            .filter(
-                listing_id=booking.availability.listing_id,
-                date__range=(booking.start_date, booking.end_date),
-            )
-            .order_by("date", "pk")
-        )
-        RentalAvailability.objects.filter(
-            pk__in=[row.pk for row in released.values()]
-        ).update(units_available=F("units_available") + 1)
+        _give_units_back(booking)
 
     return booking
+
+
+def delete_rental_booking(booking):
+    """Delete `booking`, first giving its units back unless it was cancelled."""
+    with transaction.atomic():
+        if not RentalBookingStatus.is_cancelled(booking.status):
+            _give_units_back(booking)
+        booking.delete()
