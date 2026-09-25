@@ -57,7 +57,7 @@ so any caller (your own API, a management command, the admin) gets the same beha
 
 ```python
 from django_rentals.models import RentalAvailability, RentalBooking, RentalListing
-from django_rentals.services import create_rental_booking
+from django_rentals.services import cancel_rental_booking, create_rental_booking
 
 listings = RentalListing.objects.published()               # published, active, verified operator
 open_dates = RentalAvailability.objects.bookable()          # in stock, on a published listing
@@ -65,12 +65,17 @@ booking = create_rental_booking(
     availability, full_name="Ayesha Khan", email="ayesha@example.com",
     phone_number="+923001234567", start_date=start, end_date=end,
 )                                                            # per-day price x days, inclusive
+cancel_rental_booking(booking)                               # gives the units back
 found = RentalBooking.objects.matching_guest(number, email="ayesha@example.com")
 ```
 
-`create_rental_booking` raises Django's `ValidationError` when the range ends before it starts,
-and doesn't check or reduce `units_available` yet. `matching_guest` never matches on the
-booking number alone.
+`create_rental_booking` takes the listing's availability row for `start_date`. Every day in the
+range needs a row with a unit left, and each of those rows gives up one unit, under a row lock
+so two bookings can't both take the last unit on a day. It raises Django's `ValidationError`
+when the range ends before it starts, and (keyed by `availability`) when the row isn't the
+start date's or a day has no unit left. `cancel_rental_booking` gives one unit back on each day,
+and raises `ValidationError` for a booking that is already cancelled or can't be cancelled.
+`matching_guest` never matches on the booking number alone.
 
 ## Custom Location model
 
