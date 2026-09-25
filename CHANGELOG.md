@@ -5,6 +5,22 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-25
+
+### Added
+- `django_rentals.services.cancel_rental_booking()`: cancels a booking
+  that can still be cancelled and gives one unit back on each day it
+  covered. Raises `ValidationError` otherwise.
+
+### Changed
+- `create_rental_booking()` now checks availability. `availability` must
+  be the listing's row for `start_date`, every day in the range needs a
+  row with a unit left, and each of those rows gives up one unit, under a
+  row lock. Raises `ValidationError({"availability": ...})` when the row
+  isn't the start date's or a day is missing or sold out. Cancel through
+  `cancel_rental_booking()` rather than `RentalBooking.cancel()`, which
+  only changes the status.
+
 ## [1.0.0] - 2026-09-25
 
 The package now ships the rentals domain only: models, querysets,
