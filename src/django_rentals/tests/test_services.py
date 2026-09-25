@@ -1,10 +1,11 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils.timezone import localdate
 
-from django_rentals.choices import RentalBookingStatus
-from django_rentals.models import RentalAvailability, RentalBooking
+from django_rentals.choices import RentalBookingStatus, RentalListingStatus
+from django_rentals.models import RentalAvailability, RentalBooking, RentalListing
 from django_rentals.services import (
     ALREADY_CANCELLED,
     AVAILABILITY_NOT_START_DATE,
@@ -19,7 +20,7 @@ from django_rentals.tests.factories import (
     UserFactory,
 )
 
-START = date(2026, 10, 1)
+START = localdate() + timedelta(days=30)
 
 
 def make_days(days=3, units=1, listing_price=4000, **kwargs):
@@ -109,7 +110,7 @@ class CreateRentalBookingTestCase(TestCase):
         with self.assertRaises(ValidationError) as ctx:
             self.book(rows[0])
 
-        self.assertEqual(ctx.exception.message_dict, {"availability": ["Not available on: 2026-10-02."]})
+        self.assertEqual(ctx.exception.message_dict, {"availability": [f"Not available on: {(START + timedelta(days=1)).isoformat()}."]})
         self.assertEqual(RentalBooking.objects.count(), 0)
         self.assertEqual(self.units_left(rows), [1, 0, 1])
 
@@ -119,7 +120,7 @@ class CreateRentalBookingTestCase(TestCase):
         with self.assertRaises(ValidationError) as ctx:
             self.book(rows[0])
 
-        self.assertEqual(ctx.exception.message_dict, {"availability": ["Not available on: 2026-10-03."]})
+        self.assertEqual(ctx.exception.message_dict, {"availability": [f"Not available on: {(START + timedelta(days=2)).isoformat()}."]})
 
     def test_ignores_other_listings_on_the_same_days(self):
         rows = make_days(days=1)
@@ -136,6 +137,30 @@ class CreateRentalBookingTestCase(TestCase):
             self.book(rows[0])
 
         self.assertEqual(RentalBooking.objects.count(), 1)
+
+
+    def test_rejects_a_past_start_date(self):
+        past = localdate() - timedelta(days=2)
+        listing = RentalListingFactory()
+        rows = [
+            RentalAvailabilityFactory(listing=listing, date=past + timedelta(days=offset), units_available=1)
+            for offset in range(2)
+        ]
+
+        with self.assertRaises(ValidationError) as ctx:
+            self.book(rows[0], start_date=past, end_date=past + timedelta(days=1))
+
+        self.assertIn("availability", ctx.exception.message_dict)
+        self.assertFalse(RentalBooking.objects.exists())
+
+    def test_rejects_an_unpublished_listing(self):
+        rows = make_days()
+        RentalListing.objects.filter(pk=rows[0].listing_id).update(status=RentalListingStatus.DRAFT)
+
+        with self.assertRaises(ValidationError):
+            self.book(rows[0])
+
+        self.assertEqual(self.units_left(rows), [1, 1, 1])
 
 
 class CancelRentalBookingTestCase(TestCase):

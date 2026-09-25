@@ -60,7 +60,7 @@ from django_rentals.models import RentalAvailability, RentalBooking, RentalListi
 from django_rentals.services import cancel_rental_booking, create_rental_booking
 
 listings = RentalListing.objects.published()               # published, active, verified operator
-open_dates = RentalAvailability.objects.bookable()          # in stock, on a published listing
+open_dates = RentalAvailability.objects.bookable()          # from today, in stock, published listing
 booking = create_rental_booking(
     availability, full_name="Ayesha Khan", email="ayesha@example.com",
     phone_number="+923001234567", start_date=start, end_date=end,
@@ -70,7 +70,7 @@ found = RentalBooking.objects.matching_guest(number, email="ayesha@example.com")
 ```
 
 `create_rental_booking` takes the listing's availability row for `start_date`. Every day in the
-range needs a row with a unit left, and each of those rows gives up one unit, under a row lock
+range needs an `open()` row (from today, on a published listing) with a unit left, and each of those rows gives up one unit, under a row lock
 so two bookings can't both take the last unit on a day. It raises Django's `ValidationError`
 when the range ends before it starts, and (keyed by `availability`) when the row isn't the
 start date's or a day has no unit left. `cancel_rental_booking` gives one unit back on each day,

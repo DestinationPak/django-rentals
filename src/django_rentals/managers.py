@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.timezone import now
+from django.utils.timezone import localdate, now
 
 from django_rentals.choices import RentalListingStatus
 
@@ -27,14 +27,23 @@ class RentalAvailabilityQuerySet(models.QuerySet):
     def upcoming(self):
         return self.filter(date__gte=now())
 
-    def bookable(self):
-        """Availability a guest can book: in stock, on a published listing, earliest first."""
+    def open(self):
+        """
+        Dates a guest may book, whether or not units are left.
+
+        Leaves out past dates and listings the public can't see (the
+        `RentalListing.objects.published()` rules).
+        """
         return self.filter(
-            units_available__gt=0,
+            date__gte=localdate(),
             listing__status=RentalListingStatus.PUBLISHED,
             listing__is_active=True,
             listing__operator__verified=True,
-        ).order_by("date")
+        )
+
+    def bookable(self):
+        """Open dates with a unit left, earliest first."""
+        return self.open().filter(units_available__gt=0).order_by("date")
 
 
 class RentalBookingQuerySet(models.QuerySet):

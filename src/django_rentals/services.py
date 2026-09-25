@@ -51,11 +51,12 @@ def create_rental_booking(  # pylint:disable=too-many-arguments
     Book a listing from `start_date` to `end_date`, both days included.
 
     `availability` is the listing's row for `start_date`. Every day in the
-    range needs an availability row with a unit left, and each of those
-    rows gives up one unit. The rows are locked while this happens, so two
-    bookings can't both take the last unit on a day. Raises a
-    ValidationError, keyed by `availability` for the day checks. Prices the
-    booking at `availability`'s per-day price times the number of days.
+    range needs an open availability row (not past, on a published
+    listing) with a unit left, and each of those rows gives up one unit.
+    The rows are locked while this happens, so two bookings can't both
+    take the last unit on a day. Raises a ValidationError, keyed by
+    `availability` for the day checks. Prices the booking at
+    `availability`'s per-day price times the number of days.
     """
     validate_rental_dates(start_date, end_date)
     if availability.date != start_date:
@@ -64,7 +65,8 @@ def create_rental_booking(  # pylint:disable=too-many-arguments
 
     with transaction.atomic():
         taken = _first_row_per_day(
-            RentalAvailability.objects.select_for_update()
+            RentalAvailability.objects.open()
+            .select_for_update()
             .filter(
                 listing_id=availability.listing_id,
                 date__range=(start_date, end_date),
