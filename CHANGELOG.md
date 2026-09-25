@@ -5,6 +5,17 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-25
+
+### Added
+- `RentalAvailability.objects.open()`: dates a guest may book, whether or
+  not units are left (today onwards, on a published listing).
+
+### Fixed
+- `bookable()` included past dates; it is now `open()` with a unit left.
+- `create_rental_booking()` accepted past dates and unpublished listings.
+  Every day in the range must now be an `open()` date with a unit left.
+
 ## [1.1.0] - 2026-09-25
 
 ### Added

@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.test import TestCase
+from django.utils.timezone import localdate
 
 from django_rentals.choices import RentalListingStatus
 from django_rentals.models import RentalAvailability, RentalBooking, RentalListing
@@ -41,6 +44,16 @@ class BookableAvailabilityTestCase(TestCase):
         RentalAvailabilityFactory(units_available=0)
 
         self.assertFalse(RentalAvailability.objects.bookable().exists())
+
+    def test_leaves_out_past_dates(self):
+        RentalAvailabilityFactory(date=localdate() - timedelta(days=1), units_available=2)
+
+        self.assertFalse(RentalAvailability.objects.bookable().exists())
+
+    def test_open_keeps_sold_out_dates(self):
+        availability = RentalAvailabilityFactory(units_available=0)
+
+        self.assertEqual(list(RentalAvailability.objects.open()), [availability])
 
     def test_leaves_out_dates_on_unpublished_listings(self):
         RentalAvailabilityFactory(listing__status=RentalListingStatus.DRAFT)
