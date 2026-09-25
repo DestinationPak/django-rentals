@@ -5,6 +5,22 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-25
+
+### Added
+- A `check_cancellable` keyword on the cancel service. Staff tools pass
+  `cancel_rental_booking(..., check_cancellable=False)` to cancel a booking in any live status, not only one a guest
+  could still cancel.
+- `delete_rental_booking()`: deletes a booking, first giving its units back unless it was
+  already cancelled.
+
+### Fixed
+- The admin changed a booking's status or deleted it without touching
+  capacity, so units were lost for good. Cancelling or deleting in the
+  admin (including the bulk delete action) now goes through the services,
+  a cancelled booking can't be reopened, and `availability`, `start_date` and `end_date` are read-only on an
+  existing booking.
+
 ## [1.2.0] - 2026-09-25
 
 ### Added
